@@ -607,8 +607,8 @@ contains
     real,    dimension(xstart:xend,ystart:yend), intent(out) :: msftx
     real,    dimension(xstart:xend,ystart:yend), intent(out) :: msfty
     ! the following two vars have xstart:xend,ystart:yend bounds
-    real,    dimension(:,:), intent(out), allocatable :: glact
-    real,    dimension(:,:), intent(out), allocatable :: vis_icealb
+    real,    dimension(:,:), intent(inout), allocatable :: glact
+    real,    dimension(:,:), intent(inout), allocatable :: vis_icealb
 
     character(len=256) :: units
     integer :: ierr
