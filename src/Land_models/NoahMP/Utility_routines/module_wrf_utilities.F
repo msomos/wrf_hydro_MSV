@@ -1,23 +1,3 @@
-!  Program Name:
-!  Author(s)/Contact(s):
-!  Abstract:
-!  History Log:
-!
-!  Usage:
-!  Parameters: <Specify typical arguments passed>
-!  Input Files:
-!        <list file names and briefly describe the data they include>
-!  Output Files:
-!        <list file names and briefly describe the information they include>
-!
-!  Condition codes:
-!        <list exit condition or error codes returned >
-!        If appropriate, descriptive troubleshooting instructions or
-!        likely causes for failures could be mentioned here with the
-!        appropriate error code
-!
-!  User controllable options: <if applicable>
-
 !WRF:DRIVER_LAYER:UTIL
 !
 
@@ -47,8 +27,8 @@ END SUBROUTINE wrf_error_fatal
 SUBROUTINE wrf_abort
   use module_cpl_land
   integer ierr
-  CALL MPI_ABORT(HYDRO_COMM_WORLD,1,ierr)
-  call MPI_finalize(ierr)
+  call MPI_Abort(HYDRO_COMM_WORLD,1,ierr)
+  call MPI_Finalize(ierr)
   STOP 'wrf_abort'
 END SUBROUTINE wrf_abort
 

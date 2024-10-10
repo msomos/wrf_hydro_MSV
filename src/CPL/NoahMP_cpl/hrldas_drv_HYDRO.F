@@ -1,23 +1,3 @@
-!  Program Name:
-!  Author(s)/Contact(s):
-!  Abstract:
-!  History Log:
-!  <brief list of changes to this source file>
-!
-!  Usage:
-!  Parameters: <Specify typical arguments passed>
-!  Input Files:
-!        <list file names and briefly describe the data they include>
-!  Output Files:
-!        <list file names and briefly describe the information they include>
-!
-!  Condition codes:
-!        <list exit condition or error codes returned >
-!        If appropriate, descriptive troubleshooting instructions or
-!        likely causes for failures could be mentioned here with the
-!        appropriate error code
-!
-!  User controllable options: <if applicable>
 
 !2345678
 
@@ -414,6 +394,14 @@
          integer :: did, iocflag
          iocflag = nlst(did)%io_config_outputs
       end subroutine get_iocflag
+
+      subroutine get_rstrt_swc(did, restart_flag)
+         use config_base, only: nlst
+         implicit none
+         integer, intent(in)  :: did
+         integer, intent(out) :: restart_flag
+         restart_flag = nlst(did)%RSTRT_SWC
+      end subroutine
 
       subroutine get_t0OutputFlag(did, t0OutputFlag)
         use config_base, only: nlst

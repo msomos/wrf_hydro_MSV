@@ -1,23 +1,3 @@
-!  Program Name:
-!  Author(s)/Contact(s):
-!  Abstract:
-!  History Log:
-!
-!  Usage:
-!  Parameters: <Specify typical arguments passed>
-!  Input Files:
-!        <list file names and briefly describe the data they include>
-!  Output Files:
-!        <list file names and briefly describe the information they include>
-!
-!  Condition codes:
-!        <list exit condition or error codes returned >
-!        If appropriate, descriptive troubleshooting instructions or
-!        likely causes for failures could be mentioned here with the
-!        appropriate error code
-!
-!  User controllable options: <if applicable>
-
 module module_hrldas_netcdf_io
   use module_date_utilities
   use netcdf
@@ -437,9 +417,9 @@ contains
     integer :: rank
 
 #ifdef _PARALLEL_
-    call MPI_COMM_RANK(HYDRO_COMM_WORLD, rank, ierr)
+    call MPI_Comm_rank(HYDRO_COMM_WORLD, rank, ierr)
     if (ierr /= MPI_SUCCESS) stop "FATAL ERROR: In module_hrldas_netcdf_io.F "// &
-                                  "read_hrldas_hdrinfo() - MPI_COMM_RANK"
+                                  "read_hrldas_hdrinfo() - MPI_Comm_rank"
 #else
     rank = 0
 #endif
@@ -606,9 +586,8 @@ contains
     real,    dimension(xstart:xend,ystart:yend), intent(out) :: seaice
     real,    dimension(xstart:xend,ystart:yend), intent(out) :: msftx
     real,    dimension(xstart:xend,ystart:yend), intent(out) :: msfty
-    ! the following two vars have xstart:xend,ystart:yend bounds
-    real,    dimension(:,:), intent(out), allocatable :: glact
-    real,    dimension(:,:), intent(out), allocatable :: vis_icealb
+    real,    dimension(:,:), intent(inout), allocatable :: glact
+    real,    dimension(:,:), intent(inout), allocatable :: vis_icealb
 
     character(len=256) :: units
     integer :: ierr
@@ -619,9 +598,9 @@ contains
     crocus_opt = local_crocus_opt ! setting module scope variable
 
 #ifdef _PARALLEL_
-    call MPI_COMM_RANK(HYDRO_COMM_WORLD, rank, ierr)
+    call MPI_Comm_rank(HYDRO_COMM_WORLD, rank, ierr)
     if (ierr /= MPI_SUCCESS) stop "FATAL ERROR: In module_hrldas_netcdf_io.F readland_hrldas()"// &
-                                  " - MPI_COMM_RANK"
+                                  " - MPI_Comm_rank"
 #else
     rank = 0
 #endif
@@ -641,8 +620,8 @@ contains
     if (ierr /= 0) then
        write(*,'("READLAND_HRLDAS:  Problem opening wrfinput file: ''", A, "''")') trim(wrfinput_flnm)
 #ifdef _PARALLEL_
-       call mpi_finalize(ierr)
-       if (ierr /= 0) write(*, '("Problem with MPI_finalize.")')
+       call MPI_Finalize(ierr)
+       if (ierr /= 0) write(*, '("Problem with MPI_Finalize.")')
 #endif
        stop "FATAL ERROR: In module_hrldas_netcdf_io.F readland_hrldas()"// &
             " - Problem opening wrfinput file."
@@ -700,6 +679,8 @@ contains
           stop "FATAL ERROR: In module_hrldas_netcdf_io.F readland_hrldas()"// &
                " - crocus_opt on but netcdf read of glacinfo returned non-zero"
        end if
+
+       if (allocated(glact) .eqv. .false.) error stop "FATAL ERROR: glact not initialized but crocus is on"
        ! Get Glacier thickness (glact)
        call get_2d_netcdf("glacier_thickness", ncid, glact,   units, xstart, xend, ystart, yend, NOT_FATAL, ierr)
        if (ierr /= 0) then
@@ -708,6 +689,7 @@ contains
                ". Setting glacier thickness to 0.0"
        end if
 
+       if (allocated(vis_icealb) .eqv. .false.) error stop "FATAL ERROR: vis_icealb not initialized but crocus is on"
        ! Get visible ice albedo map (vis_icealb)
        call get_2d_netcdf("min_vis", ncid, vis_icealb,   units, xstart, xend, ystart, yend, NOT_FATAL, ierr)
        if (ierr /= 0) then
@@ -758,9 +740,9 @@ contains
     integer :: rank
 
 #ifdef _PARALLEL_
-    call MPI_COMM_RANK(HYDRO_COMM_WORLD, rank, ierr)
+    call MPI_Comm_rank(HYDRO_COMM_WORLD, rank, ierr)
     if (ierr /= MPI_SUCCESS) stop "FATAL ERROR: In module_hrldas_netcdf_io.F read_mmf_runoff()"// &
-                                  " - MPI_COMM_RANK"
+                                  " - MPI_Comm_rank"
 #else
     rank = 0
 #endif
@@ -780,8 +762,8 @@ contains
     if (ierr /= 0) then
        write(*,'("read_mmf_runoff:  Problem opening wrfinput file: ''", A, "''")') trim(wrfinput_flnm)
 #ifdef _PARALLEL_
-       call mpi_finalize(ierr)
-       if (ierr /= 0) write(*, '("Problem with MPI_finalize.")')
+       call MPI_Finalize(ierr)
+       if (ierr /= 0) write(*, '("Problem with MPI_Finalize.")')
 #endif
        stop "FATAL ERROR: In module_hrldas_netcdf_io.F read_mmf_runoff()"// &
             " - Problem opening wrfinput file."
@@ -1531,9 +1513,9 @@ contains
 
 #ifdef _PARALLEL_
 
-    call MPI_COMM_RANK(HYDRO_COMM_WORLD, rank, ierr)
+    call MPI_Comm_rank(HYDRO_COMM_WORLD, rank, ierr)
     if (ierr /= MPI_SUCCESS) stop "FATAL ERROR: In  module_hrldas_netcdf_io.F"// &
-                                  " readinit_hrldas() - MPI_COMM_RANK"
+                                  " readinit_hrldas() - MPI_Comm_rank"
 
     ierr = nf90_open_par(netcdf_flnm, NF90_NOWRITE, HYDRO_COMM_WORLD, MPI_INFO_NULL, ncid)
 #else
@@ -1552,7 +1534,7 @@ contains
 #endif
        endif
 #ifdef _PARALLEL_
-       call mpi_finalize(ierr)
+       call MPI_Finalize(ierr)
 #endif
        stop "FATAL ERROR: In  module_hrldas_netcdf_io.F readinit_hrldas()"// &
             " - Problem opening netcdf file."
@@ -1676,9 +1658,9 @@ contains
     integer :: rank
 
 #ifdef _PARALLEL_
-    call MPI_COMM_RANK(HYDRO_COMM_WORLD, rank, ierr)
+    call MPI_Comm_rank(HYDRO_COMM_WORLD, rank, ierr)
     if (ierr /= MPI_SUCCESS) stop "FATAL ERROR: In  module_hrldas_netcdf_io.F init_interp()"// &
-                                  " - MPI_COMM_RANK."
+                                  " - MPI_Comm_rank."
 #else
     rank = 0
 #endif
@@ -1982,15 +1964,15 @@ contains
 #endif
        if (ierr /= 0) then
 #ifdef _PARALLEL_
-          call MPI_COMM_RANK(HYDRO_COMM_WORLD, rank, ierr)
+          call MPI_Comm_rank(HYDRO_COMM_WORLD, rank, ierr)
           if (ierr /= MPI_SUCCESS) stop "FATAL ERROR: In  module_hrldas_netcdf_io.F"// &
-                                        " READFORC_HRLDAS() - MPI_COMM_RANK"
+                                        " READFORC_HRLDAS() - MPI_Comm_rank"
           if (rank == 0) then
 #endif
              write(*,'("A)  Problem opening netcdf file: ''", A, "''")') trim(flnm)
 #ifdef _PARALLEL_
           endif
-          call mpi_finalize(ierr)
+          call MPI_Finalize(ierr)
 #endif
           stop  "FATAL ERROR: In  module_hrldas_netcdf_io.F READFORC_HRLDAS()"// &
                 " - Problem opening netcdf file"
@@ -3117,9 +3099,9 @@ contains
 
 #ifdef _PARALLEL_
 
-    call MPI_COMM_RANK(HYDRO_COMM_WORLD, rank, ierr)
+    call MPI_Comm_rank(HYDRO_COMM_WORLD, rank, ierr)
     if (ierr /= MPI_SUCCESS) stop "FATAL ERROR: In module_hrldas_netcdf_io.F"// &
-                                  " prepare_restart_file_seq() - MPI_COMM_RANK problem"
+                                  " prepare_restart_file_seq() - MPI_Comm_rank problem"
 
 #else
 
@@ -3451,9 +3433,9 @@ contains
     restart_filename_remember = restart_flnm
 
 #ifdef _PARALLEL_
-    call MPI_COMM_RANK(HYDRO_COMM_WORLD, rank, ierr)
+    call MPI_Comm_rank(HYDRO_COMM_WORLD, rank, ierr)
     if (ierr /= MPI_SUCCESS) stop "FATAL ERROR: In module_hrldas_netcdf_io.F "// &
-                                  "read_restart() - MPI_COMM_RANK"
+                                  "read_restart() - MPI_Comm_rank"
 
     ierr = nf90_open_par(trim(restart_flnm), NF90_NOWRITE, HYDRO_COMM_WORLD, MPI_INFO_NULL, ncid)
 #else
@@ -3633,9 +3615,9 @@ contains
 
 #ifdef _PARALLEL_
 
-    call MPI_COMM_RANK(HYDRO_COMM_WORLD, rank, ierr)
+    call MPI_Comm_rank(HYDRO_COMM_WORLD, rank, ierr)
     if (ierr /= MPI_SUCCESS) stop "FATAL ERROR: In module_hrldas_netcdf_io.F "// &
-                                  "get_from_restart_2d_float() - MPI_COMM_RANK"
+                                  "get_from_restart_2d_float() - MPI_Comm_rank"
 
     ierr = nf90_open_par(trim(restart_filename_remember), NF90_NOWRITE, HYDRO_COMM_WORLD, MPI_INFO_NULL, ncid)
 
